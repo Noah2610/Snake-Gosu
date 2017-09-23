@@ -18,7 +18,7 @@ $controls = {
 }
 $score = 0
 $max_foods = 5
-$game_speed = 250
+$game_speed = 200
 $food_spawn_chance = (0..4)
 
 
@@ -50,7 +50,8 @@ class Snake
 		@size = $grid_size
 		@color_head = Gosu::Color.argb(0xff_0000ff)
 		@color_body = Gosu::Color.argb(0xff_00ffff)
-		@mv_dir = { x: 1, y: 0 }
+		#@mv_dir = { x: 1, y: 0 }
+		@mv_dir = [{ x: 1, y: 0 }]
 		@body = [
 			{ x: (@x - 1), y: @y },
 			{ x: (@x - 2), y: @y },
@@ -72,8 +73,9 @@ class Snake
 			end
 		end
 		# move head
-		@x += @mv_dir[:x]
-		@y += @mv_dir[:y]
+		@x += @mv_dir[0][:x]
+		@y += @mv_dir[0][:y]
+		@mv_dir.delete_at(0)  if (@mv_dir.size > 1)
 
 		# loop around if offscreen
 		if (@x > $grid[:width] - 1)
@@ -155,6 +157,7 @@ class Game < Gosu::Window
 		@snake = Snake.new
 		@foods = []
 		@text = Gosu::Font.new 32
+		#@can_control = false
 	end
 
 	def button_down (id)
@@ -164,15 +167,18 @@ class Game < Gosu::Window
 		return  unless $game_running
 
 		# snake movement
-		if (id.is_key? $controls[:up])        # up
-			@snake.mv_dir = { x: 0, y: -1 }  unless (@snake.mv_dir == { x: 0, y: 1 })
-		elsif (id.is_key? $controls[:down])   # down
-			@snake.mv_dir = { x: 0, y: 1 }   unless (@snake.mv_dir == { x: 0, y: -1 })
-		elsif (id.is_key? $controls[:left])   # left
-			@snake.mv_dir = { x: -1, y: 0 }  unless (@snake.mv_dir == { x: 1, y: 0 })
-		elsif (id.is_key? $controls[:right])  # right
-			@snake.mv_dir = { x: 1, y: 0 }   unless (@snake.mv_dir == { x: -1, y: 0 })
-		end
+		#if (@can_control)
+			#@can_control = false
+			if (id.is_key? $controls[:up])        # up
+				@snake.mv_dir << { x: 0, y: -1 }  unless (@snake.mv_dir == { x: 0, y: 1 })
+			elsif (id.is_key? $controls[:down])   # down
+				@snake.mv_dir << { x: 0, y: 1 }   unless (@snake.mv_dir == { x: 0, y: -1 })
+			elsif (id.is_key? $controls[:left])   # left
+				@snake.mv_dir << { x: -1, y: 0 }  unless (@snake.mv_dir == { x: 1, y: 0 })
+			elsif (id.is_key? $controls[:right])  # right
+				@snake.mv_dir << { x: 1, y: 0 }   unless (@snake.mv_dir == { x: -1, y: 0 })
+			end
+		#end
 	end
 
 	def update
@@ -185,6 +191,8 @@ class Game < Gosu::Window
 			food.collision_check
 		end
 		@snake.move
+
+		#@can_control = true
 	end
 
 	def draw
